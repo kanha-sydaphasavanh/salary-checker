@@ -75,7 +75,7 @@ let state = loadState();
                 return;
             }
             const fileName = downloadResponse.headers['content-disposition'].match(/filename="(.+?)"/)[1];
-            const filePath = path.resolve(__dirname, fileName);
+            const filePath = path.resolve(__dirname,'data', fileName);
             const writer = fs.createWriteStream(filePath);
             saveState({ lastLength: items.length });
             console.log(`${dateTimeStr} - Nouvelle fiche détectée, id : ${firstId} - ${fileName}`);
