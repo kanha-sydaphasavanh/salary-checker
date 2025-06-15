@@ -10,8 +10,8 @@ const headers = {
 const AUTH_TOKEN = '';
 const STATE_FILE = path.resolve(__dirname, 'state.json');
 const now = new Date();
-const dateStr = now.toLocaleDateString();
-const timeStr = now.toLocaleTimeString();
+const dateStr = now.toLocaleDateString('fr-FR');
+const timeStr = now.toLocaleTimeString('fr-FR');
 const dateTimeStr = `${dateStr} ${timeStr}`;
 
 function loadState() {
