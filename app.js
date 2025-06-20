@@ -10,9 +10,10 @@ const headers = {
 const AUTH_TOKEN = '';
 const STATE_FILE = path.resolve(__dirname, 'state.json');
 const now = new Date();
-const dateStr = now.toLocaleDateString('fr-FR');
-const timeStr = now.toLocaleTimeString('fr-FR');
-const dateTimeStr = `${dateStr} ${timeStr}`;
+const DATE = now.toLocaleDateString('fr-FR');
+const TIME = now.toLocaleTimeString('fr-FR');
+const DATETIME = `${DATE} ${TIME}`;
+const WH = 'https://padek:5678/webhook/4336caed-1b5f-4ff0-b002-726b6ebded2d'
 
 function loadState() {
     try {
@@ -48,11 +49,11 @@ let state = loadState();
 
         const items = response.data.items;
         if (!Array.isArray(items)) {
-            console.error(dateTimeStr + ' - Réponse inattendue :', response.data);
+            console.error(DATETIME + ' - Réponse inattendue :', response.data);
             return;
         }
 
-        console.log(`${dateTimeStr} - Nombre de fiches de paie : ${items.length}`);
+        console.log(`${DATETIME} - Nombre de fiches de paie : ${items.length}`);
 
         if (items.length > state.lastLength) {
             const firstId = items[0].id;
@@ -69,19 +70,31 @@ let state = loadState();
                     responseType: 'stream',
                 }
             );
-            
+
             if (downloadResponse.status !== 200) {
-                console.error(`${dateTimeStr} - Erreur lors du téléchargement :`, downloadResponse.statusText);
+                console.error(`${DATETIME} - Erreur lors du téléchargement :`, downloadResponse.statusText);
                 return;
             }
             const fileName = downloadResponse.headers['content-disposition'].match(/filename="(.+?)"/)[1];
-            const filePath = path.resolve(__dirname,'data', fileName);
+            const filePath = path.resolve(__dirname, 'data', fileName);
             const writer = fs.createWriteStream(filePath);
             saveState({ lastLength: items.length });
-            console.log(`${dateTimeStr} - Nouvelle fiche détectée, id : ${firstId} - ${fileName}`);
-            console.log(`${dateTimeStr} - Fichier téléchargé et sauvegardé : ${filePath}`);
-
+            console.log(`${DATETIME} - Nouvelle fiche détectée, id : ${firstId} - ${fileName}`);
+            console.log(`${DATETIME} - Fichier téléchargé et sauvegardé : ${filePath}`);
+            // Envoi du fichier à l'URL de webhook
             downloadResponse.data.pipe(writer);
+
+            const webhookResponse = await axios.post(WH, {
+                fileName: fileName
+            }, {
+                httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
+            });
+
+            if (webhookResponse.status !== 200) {
+                console.error(`${DATETIME} - Erreur lors de l'envoi au webhook :`, webhookResponse.statusText);
+                return;
+            }
+            console.log(`${DATETIME} - Envoyé au webhook avec succès.`);
             await new Promise((resolve, reject) => {
                 writer.on('finish', resolve);
                 writer.on('error', reject);
@@ -101,12 +114,12 @@ let state = loadState();
             state = { lastLength: 0 };
         } else {
 
-            console.log(`${dateTimeStr} - Pas de nouvelle fiche de paie.`);
+            console.log(`${DATETIME} - Pas de nouvelle fiche de paie.`);
         }
     } catch (error) {
-        console.error(`${dateTimeStr} - Erreur lors de la vérification des fiches de paie :`, error.message);
+        console.error(`${DATETIME} - Erreur lors de la vérification des fiches de paie :`, error.message);
     }
 }
 )().catch(err => {
-    console.error(`${dateTimeStr} - Erreur inattendue :`, err.message);
+    console.error(`${DATETIME} - Erreur inattendue :`, err.message);
 });
