@@ -36,6 +36,11 @@ delayed-stream@~1.0.0:
   resolved "https://registry.yarnpkg.com/delayed-stream/-/delayed-stream-1.0.0.tgz#df3ae199acadfb7d440aaae0b29e2272b24ec619"
   integrity sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==
 
+dotenv@^16.5.0:
+  version "16.5.0"
+  resolved "https://registry.yarnpkg.com/dotenv/-/dotenv-16.5.0.tgz#092b49f25f808f020050051d1ff258e404c78692"
+  integrity sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg==
+
 dunder-proto@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/dunder-proto/-/dunder-proto-1.0.1.tgz#d7ae667e1dc83482f8b70fd0f6eefc50da30f58a"
@@ -156,11 +161,6 @@ mime-types@^2.1.12:
   integrity sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==
   dependencies:
     mime-db "1.52.0"
-
-node-cron@^4.0.7:
-  version "4.0.7"
-  resolved "https://registry.yarnpkg.com/node-cron/-/node-cron-4.0.7.tgz#f6c2542053bbf2ddd49742caeb560ec4c02236e9"
-  integrity sha512-A37UUDpxRT/kWanELr/oMayCWQFk9Zx9BEUoXrAKuKwKzH4XuAX+vMixMBPkgZBkADgJwXv91w5cMRTNSVP/mA==
 
 proxy-from-env@^1.1.0:
   version "1.1.0"
