@@ -2,12 +2,12 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY package.json yarn.lock ./
 
-RUN npm install axios
+RUN yarn install --frozen-lockfile
 
-COPY app.js .
+COPY . .
 
-VOLUME [ "/app/data" ]
+VOLUME ["/app/data"]
 
 CMD ["node", "app.js"]
