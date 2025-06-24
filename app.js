@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios')
-require('dotenv').config();
+// require('dotenv').config();
 
 const now = new Date();
 const DATE = now.toLocaleDateString('fr-FR');
