@@ -93,9 +93,11 @@ let state = loadState();
             console.log(`${DATETIME} - Fichier téléchargé et sauvegardé : ${filePath}`);
             downloadResponse.data.pipe(writer);
 
-            api_discord.post(`/channels/${process.env.DISCORD_CHANNEL_ID}/messages`, {
-                content: `${DATETIME} - Nouvelle fiche de paie arrivé : ${fileName}.`,
-            });
+            if(process.env.ALLOW_DISCORD_NOTIFICATIONS) {
+                api_discord.post(`/channels/${process.env.DISCORD_CHANNEL_ID}/messages`, {
+                    content: `\u{1F4B8}\u{1F4B8} - Nouvelle fiche de paie arrivé : ${fileName}.`,
+                });
+            }
 
             await new Promise((resolve, reject) => {
                 writer.on('finish', resolve);
