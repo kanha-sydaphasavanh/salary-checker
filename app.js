@@ -4,8 +4,8 @@ const axios = require('axios')
 // require('dotenv').config();
 
 const now = new Date();
-const DATE = now.toLocaleDateString('fr-FR');
-const TIME = now.toLocaleTimeString('fr-FR');
+const DATE = now.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
+const TIME = now.toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris' });
 const DATETIME = `${DATE} ${TIME}`;
 const AUTH_TOKEN = process.env.ILUCCA_AUTH_TOKEN;
 
