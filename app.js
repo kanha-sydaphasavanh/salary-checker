@@ -1,20 +1,32 @@
 const fs = require('fs');
 const path = require('path');
 const axios = require('axios')
-const baseURL = 'https://sivecogroup.ilucca.net/payslip/api/payslips'
+// require('dotenv').config();
 
-const headers = {
-    'Cookie': `_BEAMER_USER_ID_xWDIXXVd32349=da4b654f-42ae-485d-b75b-a705f533fd98; _BEAMER_FIRST_VISIT_xWDIXXVd32349=${new Date().toISOString()}; authToken=c08b6d12-ced1-4ab1-b29a-38923fc57f67; _dd_s=rum=0^&expire=1748596913018`,
-    'Content-Type': 'application/json'
-}
-const AUTH_TOKEN = '';
-const STATE_FILE = path.resolve(__dirname, 'state.json');
 const now = new Date();
-const DATE = now.toLocaleDateString('fr-FR');
-const TIME = now.toLocaleTimeString('fr-FR');
+const DATE = now.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
+const TIME = now.toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris' });
 const DATETIME = `${DATE} ${TIME}`;
-const WH = 'https://padek:5678/webhook/4336caed-1b5f-4ff0-b002-726b6ebded2d'
+const AUTH_TOKEN = process.env.ILUCCA_AUTH_TOKEN;
 
+const api_ilucca = axios.create({
+    baseURL: 'https://sivecogroup.ilucca.net/payslip/api/payslips',
+    headers: {
+        'Cookie': `_BEAMER_USER_ID_xWDIXXVd32349=${process.env.ILUCCA_BEAMER_USER_ID}; _BEAMER_FIRST_VISIT_xWDIXXVd32349=${now.toISOString()}; authToken=${AUTH_TOKEN}; _dd_s=rum=0`,
+        'Content-Type': 'application/json'
+    }
+});
+
+const api_discord = axios.create({
+    baseURL: 'https://discord.com/api/v10',
+    headers: {
+        'Authorization': `Bot ${process.env.DISCORD_BOT_TOKEN}`,
+        'Content-Type': 'application/json',
+        'User-Agent': 'DiscordBot (https://discord.com/developers/docs/intro)'
+    }
+})
+
+const STATE_FILE = path.resolve(__dirname, 'state.json');
 function loadState() {
     try {
         if (fs.existsSync(STATE_FILE)) {
@@ -43,9 +55,7 @@ function saveState(state) {
 let state = loadState();
 (async () => {
     try {
-        const response = await axios.get(`${baseURL}/mine?limit=1000`, {
-            headers,
-        });
+        const response = await api_ilucca.get(`/mine?limit=1000`);
 
         const items = response.data.items;
         if (!Array.isArray(items)) {
@@ -56,17 +66,16 @@ let state = loadState();
         console.log(`${DATETIME} - Nombre de fiches de paie : ${items.length}`);
 
         if (items.length > state.lastLength) {
+            
             const firstId = items[0].id;
             const payload = {
                 ids: [firstId],
-                token: AUTH_TOKEN,
+                token: '',
             };
 
-            const downloadResponse = await axios.post(
-                `${baseURL}/download`,
+            const downloadResponse = await api_ilucca.post(`/download`,
                 payload,
                 {
-                    headers,
                     responseType: 'stream',
                 }
             );
@@ -79,22 +88,17 @@ let state = loadState();
             const filePath = path.resolve(__dirname, 'data', fileName);
             const writer = fs.createWriteStream(filePath);
             saveState({ lastLength: items.length });
+            
             console.log(`${DATETIME} - Nouvelle fiche détectée, id : ${firstId} - ${fileName}`);
             console.log(`${DATETIME} - Fichier téléchargé et sauvegardé : ${filePath}`);
-            // Envoi du fichier à l'URL de webhook
             downloadResponse.data.pipe(writer);
 
-            const webhookResponse = await axios.post(WH, {
-                fileName: fileName
-            }, {
-                httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false })
-            });
-
-            if (webhookResponse.status !== 200) {
-                console.error(`${DATETIME} - Erreur lors de l'envoi au webhook :`, webhookResponse.statusText);
-                return;
+            if(process.env.ALLOW_DISCORD_NOTIFICATIONS) {
+                api_discord.post(`/channels/${process.env.DISCORD_CHANNEL_ID}/messages`, {
+                    content: `\u{1F4B8}\u{1F4B8} - Nouvelle fiche de paie arrivé : ${fileName}.`,
+                });
             }
-            console.log(`${DATETIME} - Envoyé au webhook avec succès.`);
+
             await new Promise((resolve, reject) => {
                 writer.on('finish', resolve);
                 writer.on('error', reject);
