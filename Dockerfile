@@ -1,6 +1,6 @@
 FROM node:18-alpine
 
-WORKDIR /app
+WORKDIR /opt/app/salary-checker
 
 COPY package.json yarn.lock ./
 
