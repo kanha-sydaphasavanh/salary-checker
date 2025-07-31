@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync, createWriteStream } from 'fs';
 import { resolve as _resolve } from 'path';
 import axios from 'axios';
 import { AuthType, createClient } from 'webdav';
-import 'dotenv/config'; // Import dotenv to load environment variables
+import 'dotenv/config';
 
 const now = new Date();
 const DATE = now.toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' });
