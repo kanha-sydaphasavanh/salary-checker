@@ -1,5 +1,10 @@
 import axios from "axios";
-import 'dotenv/config';
+import { getDateTime } from "./utils";
+import 'dotenv/config'; // Only for dev mode
+if(process.env.NODE_ENV !== 'production') {
+    dotenv.config();
+    console.log('Using .env file to supply config environment variables');
+}
 
 export class IluccaApi {
     constructor() {
@@ -20,7 +25,7 @@ export class IluccaApi {
             const response = await this.api.get('/mine?limit=1000');
             return response.data;
         } catch (error) {
-            console.error('Error fetching payslips:', error || error.message);
+            console.error(`[${getDateTime}] - Error fetching payslips:`, error || error.message);
             throw error;
         }
     }
@@ -32,7 +37,7 @@ export class IluccaApi {
             });
             return response;
         } catch (error) {
-            console.error('Error downloading payslip:', error || error.message);
+            console.error(`[${getDateTime()}] - Error downloading payslip:`, error || error.message);
             throw error;
         }
     }
