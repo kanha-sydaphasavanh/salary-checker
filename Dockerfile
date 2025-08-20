@@ -8,6 +8,6 @@ RUN yarn install --frozen-lockfile
 
 COPY . .
 
-VOLUME ["/app/data"]
+VOLUME ["/opt/app/salary-checker/data"]
 
 CMD ["node", "app.js"]
