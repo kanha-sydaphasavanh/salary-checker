@@ -1,10 +1,7 @@
 import axios from "axios";
-import { getDateTime } from "./utils";
+import { getDateTime } from "./utils.js";
 import 'dotenv/config'; // Only for dev mode
-if(process.env.NODE_ENV !== 'production') {
-    dotenv.config();
-    console.log('Using .env file to supply config environment variables');
-}
+
 
 export class IluccaApi {
     constructor() {
@@ -14,8 +11,7 @@ export class IluccaApi {
             baseURL: 'https://sivecogroup.ilucca.net/payslip/api/payslips',
             headers: {
                 'Cookie': `_BEAMER_USER_ID_xWDIXXVd32349=${process.env.ILUCCA_BEAMER_USER_ID}; _BEAMER_FIRST_VISIT_xWDIXXVd32349=${this.now.toISOString()}; authToken=${this.AUTH_TOKEN}; _dd_s=rum=0`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Content-Type': 'application/json'
             }
         });
     }
