@@ -8,7 +8,7 @@ export class NextcloudWebdav {
         this.client = createClient(process.env.NEXTCLOUD_WEBDAV_BASE_URL, {
             authType: AuthType.BASIC,
             username: process.env.NEXTCLOUD_ADMIN_USER,
-            password: process.env.NEXTCLOUD_ADMIN_PASSWORD,
+            password: atob(process.env.NEXTCLOUD_ADMIN_PASSWORD),
             headers: {
                 'Host': process.env.NEXTCLOUD_EXTERNAL_HOST || 'localhost',
             },
