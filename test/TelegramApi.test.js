@@ -145,6 +145,63 @@ test("waitForPayslipDecision does not send the document after Non", async () => 
     assert.equal(telegramApi.pendingPayslips.size, 0);
 });
 
+test("waitForPayslipDecision ignores stale callback queries instead of crashing on 400", async () => {
+    const { telegramApi, calls } = createTelegramApi();
+    const fileBuffer = Buffer.from("payslip content");
+    await telegramApi.sendPayslipPrompt("chat-123", "fiche.pdf", fileBuffer);
+    const callbackData = calls[0].data.reply_markup.inline_keyboard[0][0].callback_data;
+    const posts = [];
+
+    let getCalls = 0;
+    telegramApi.api.get = async () => {
+        getCalls += 1;
+        if (getCalls === 1) {
+            return {
+                data: {
+                    ok: true,
+                    result: [{
+                        update_id: 1,
+                        callback_query: {
+                            id: "stale-callback",
+                            data: "payslip_yes:unknown-request",
+                            message: { chat: { id: "chat-123" }, message_id: 10 }
+                        }
+                    }]
+                }
+            };
+        }
+
+        return {
+            data: {
+                ok: true,
+                result: [{
+                    update_id: 2,
+                    callback_query: {
+                        id: "valid-callback",
+                        data: callbackData,
+                        message: { chat: { id: "chat-123" }, message_id: 42 }
+                    }
+                }]
+            }
+        };
+    };
+
+    telegramApi.api.post = async (url, data) => {
+        posts.push({ url, data });
+        if (url === "/answerCallbackQuery" && data.callback_query_id === "stale-callback") {
+            const error = new Error("Request failed with status code 400");
+            error.response = { data: { ok: false, error_code: 400, description: "Bad Request" } };
+            throw error;
+        }
+        return { data: { ok: true } };
+    };
+
+    await telegramApi.waitForPayslipDecision("chat-123");
+
+    assert.equal(posts.some(({ url }) => url === "/sendDocument"), true);
+    assert.equal(telegramApi.pendingPayslips.size, 0);
+});
+
 test("waitForPayslipDecision rejects an invalid Telegram response", async () => {
     const { telegramApi } = createTelegramApi();
     telegramApi.api.get = async () => ({ data: { ok: false, result: null } });
