@@ -59,6 +59,12 @@ let state = loadState();
                 token: '',
             };
 
+            const allowDownload = process.env.ILLUCA_ALLOW_DOWNLOAD === "true";
+            if (!allowDownload) {
+                console.log(`[${DATETIME}] - Téléchargement désactivé.`);
+                return;
+            }
+
             const downloadResponse = await api_ilucca.downloadPayslip(payload);
             if (downloadResponse.status !== 200) {
                 console.error(`[${DATETIME}] - Erreur lors du téléchargement :`, downloadResponse.statusText);
