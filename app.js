@@ -1,11 +1,12 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { resolve as _resolve } from 'path';
 import 'dotenv/config'; // Only for dev mode
-import { getDateTime, formatFilename,logEnvInfo } from './utils.js';
+import { getDateTime, formatFilename, logEnvInfo } from './utils.js';
 import { NextcloudWebdav } from './NextcloudWebdav.js';
 import { DiscordBotApi } from './DiscordBotApi.js';
 import { IluccaApi } from './IlluccaApi.js';
-import  { TelegramApi } from './TelegramApi.js';
+import { TelegramApi } from './TelegramBotApi.js';
+
 const DATETIME = getDateTime();
 const __dirname = _resolve();
 const STATE_FILE = _resolve(__dirname, 'state.json');
@@ -59,38 +60,26 @@ let state = loadState();
                 token: '',
             };
 
-            const allowDownload = process.env.ILLUCA_ALLOW_DOWNLOAD === "true";
-            if (!allowDownload) {
-                console.log(`[${DATETIME}] - Téléchargement désactivé.`);
-                return;
-            }
+
 
             const downloadResponse = await api_ilucca.downloadPayslip(payload);
             if (downloadResponse.status !== 200) {
                 console.error(`[${DATETIME}] - Erreur lors du téléchargement :`, downloadResponse.statusText);
                 return;
             }
-            
+
             const fileName = formatFilename(downloadResponse.headers['content-disposition'].match(/filename="(.+?)"/)[1]);
             console.log(`[${DATETIME}] - Nouvelle fiche détectée, id : ${firstId} - Nom du fichier : ${fileName}`);
 
             saveState({ lastLength: items.length });
 
-            try {
-                // convert into a buffer
-                const chunks = [];
-                for await (const chunk of downloadResponse.data) {
-                    chunks.push(chunk);
-                }
-                const buffer = Buffer.concat(chunks);
-                const filePath = `${process.env.NEXTCLOUD_WEBDAV_PATH_TARGET}/${fileName}`;
-                const webdavClient = new NextcloudWebdav();
-                await webdavClient.uploadFile(filePath, buffer);
-
-                console.log(`[${DATETIME}] - Fichier téléchargé et sauvegardé : ${filePath}`);
-            } catch (error) {
-                console.error(`[${DATETIME}] - Erreur lors de l'envoi vers WebDAV :`, error);
+            const chunks = [];
+            for await (const chunk of downloadResponse.data) {
+                chunks.push(chunk);
             }
+            const buffer = Buffer.concat(chunks);
+
+
 
             const ALLOW_DISCORD = process.env.ALLOW_DISCORD_NOTIFICATIONS === "true";
 
@@ -98,14 +87,35 @@ let state = loadState();
                 const discordBotApi = new DiscordBotApi();
                 await discordBotApi.sendMessage(process.env.DISCORD_CHANNEL_ID, `\u{1F4B8}\u{1F4B8} - Nouvelle fiche de paie arrivé : ${fileName}.`);
             }
-            
+
             const ALLOW_TELEGRAM = process.env.TELEGRAM_ALLOW_NOTIFICATIONS === "true";
-            
+
             if (ALLOW_TELEGRAM) {
                 const telegramApi = new TelegramApi();
                 await telegramApi.sendMessage(process.env.TELEGRAM_CHAT_ID, `\u{1F4B8}\u{1F4B8} - Nouvelle fiche de paie arrivé : ${fileName}.`);
+                await telegramApi.sendPayslipPrompt(process.env.TELEGRAM_CHAT_ID, fileName, buffer);
+                await telegramApi.waitForPayslipDecision(process.env.TELEGRAM_CHAT_ID);
             }
 
+            if (!ALLOW_TELEGRAM && !ALLOW_DISCORD) {
+                console.log(`[${DATETIME}] - Aucune notification activée.`);
+            }
+
+            const ALLOW_DOWNLOAD = process.env.ALLOW_DOWNLOAD === "true";
+            if (ALLOW_DOWNLOAD) {
+                console.log(`[${DATETIME}] - Téléchargement activé, la fiche de paie sera sauvegardée.`);
+                try {
+                    const filePath = `${process.env.NEXTCLOUD_WEBDAV_PATH_TARGET}/${fileName}`;
+                    const webdavClient = new NextcloudWebdav();
+                    await webdavClient.uploadFile(filePath, buffer);
+                    console.log(`[${DATETIME}] - Fichier téléchargé et sauvegardé : ${filePath}`);
+                } catch (error) {
+                    console.error(`[${DATETIME}] - Erreur lors de l'envoi vers WebDAV :`, error);
+                }
+            } else {
+                console.log(`[${DATETIME}] - Téléchargement désactivé, la fiche de paie ne sera pas sauvegardée.`);
+                return;
+            }
             // Save the new state after processing
             saveState({ lastLength: items.length });
 
