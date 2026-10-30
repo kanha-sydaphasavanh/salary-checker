@@ -5,7 +5,7 @@ import { getDateTime, formatFilename,logEnvInfo } from './utils.js';
 import { NextcloudWebdav } from './NextcloudWebdav.js';
 import { DiscordBotApi } from './DiscordBotApi.js';
 import { IluccaApi } from './IlluccaApi.js';
-
+import  { TelegramApi } from './TelegramApi.js';
 const DATETIME = getDateTime();
 const __dirname = _resolve();
 const STATE_FILE = _resolve(__dirname, 'state.json');
@@ -92,7 +92,16 @@ let state = loadState();
                 const discordBotApi = new DiscordBotApi();
                 await discordBotApi.sendMessage(process.env.DISCORD_CHANNEL_ID, `\u{1F4B8}\u{1F4B8} - Nouvelle fiche de paie arrivé : ${fileName}.`);
             }
+            
+            const ALLOW_TELEGRAM = process.env.TELEGRAM_ALLOW_NOTIFICATIONS === "true";
+            
+            if (ALLOW_TELEGRAM) {
+                const telegramApi = new TelegramApi();
+                await telegramApi.sendMessage(process.env.TELEGRAM_CHAT_ID, `\u{1F4B8}\u{1F4B8} - Nouvelle fiche de paie arrivé : ${fileName}.`);
+            }
 
+            // Save the new state after processing
+            saveState({ lastLength: items.length });
 
 
             // Reset state en mémoire
