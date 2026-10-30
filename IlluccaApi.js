@@ -5,12 +5,11 @@ import 'dotenv/config'; // Only for dev mode
 
 export class IluccaApi {
     constructor() {
-        this.now = new Date();
         this.AUTH_TOKEN = process.env.ILUCCA_AUTH_TOKEN;
         this.api = axios.create({
             baseURL: 'https://sivecogroup.ilucca.net/payslip/api/payslips',
             headers: {
-                'Cookie': `_BEAMER_USER_ID_xWDIXXVd32349=${process.env.ILUCCA_BEAMER_USER_ID}; _BEAMER_FIRST_VISIT_xWDIXXVd32349=${this.now.toISOString()}; authToken=${this.AUTH_TOKEN}; _dd_s=rum=0`,
+                'Cookie': `authToken=${this.AUTH_TOKEN}`,
                 'Content-Type': 'application/json'
             }
         });
