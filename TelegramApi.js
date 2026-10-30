@@ -1,4 +1,4 @@
-import {axios} from "axios";
+import axios from "axios";
 import { getDateTime } from "./utils.js";
 import "dotenv/config";
 
