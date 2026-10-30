@@ -83,17 +83,25 @@ export class TelegramApi {
                 const payslip = this.pendingPayslips.get(requestId);
 
                 if (!payslip || String(callback.message?.chat.id) !== String(chatId) || String(payslip.chatId) !== String(chatId)) {
-                    await this.api.post('/answerCallbackQuery', {
-                        callback_query_id: callback.id,
-                        text: "Cette demande n'est plus disponible."
-                    });
+                    try {
+                        await this.api.post('/answerCallbackQuery', {
+                            callback_query_id: callback.id,
+                            text: "Cette demande n'est plus disponible."
+                        });
+                    } catch (error) {
+                        console.warn(`[${getDateTime()}] - Callback Telegram périmé ou invalide ignoré pour ${chatId}:`, error?.response?.data || error.message || error);
+                    }
                     continue;
                 }
 
-                await this.api.post('/answerCallbackQuery', {
-                    callback_query_id: callback.id,
-                    text: decision === 'yes' ? 'Envoi du fichier…' : 'Téléchargement annulé.'
-                });
+                try {
+                    await this.api.post('/answerCallbackQuery', {
+                        callback_query_id: callback.id,
+                        text: decision === 'yes' ? 'Envoi du fichier…' : 'Téléchargement annulé.'
+                    });
+                } catch (error) {
+                    console.warn(`[${getDateTime()}] - Impossible de confirmer le callback Telegram pour ${chatId}:`, error?.response?.data || error.message || error);
+                }
 
                 if (decision === 'yes') {
                     const formData = new FormData();
