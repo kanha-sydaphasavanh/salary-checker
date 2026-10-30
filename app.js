@@ -102,7 +102,11 @@ let state = loadState();
             }
 
             const ALLOW_DOWNLOAD = process.env.ALLOW_DOWNLOAD === "true";
+            console.log("allow download ",ALLOW_DOWNLOAD);
+            console.log("allow tg",ALLOW_TELEGRAM);
+            
             if (ALLOW_DOWNLOAD) {
+                console.log("aled")
                 console.log(`[${DATETIME}] - Téléchargement activé, la fiche de paie sera sauvegardée.`);
                 try {
                     const filePath = `${process.env.NEXTCLOUD_WEBDAV_PATH_TARGET}/${fileName}`;
