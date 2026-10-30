@@ -113,7 +113,7 @@ let state = loadState();
                     console.error(`[${DATETIME}] - Erreur lors de l'envoi vers WebDAV :`, error);
                 }
             } else {
-                console.log(`[${DATETIME}] - Téléchargement désactivé, la fiche de paie ne sera pas sauvegardée.`);
+                console.log(`[${DATETIME}] - Téléchargement désactivé, la fiche de paie ne sera pas sauvegardée sur le serveur WebDAV.`);
                 return;
             }
             // Save the new state after processing
