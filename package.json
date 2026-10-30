@@ -2,6 +2,10 @@
   "name": "salary-checker",
   "version": "2.2.0",
   "main": "app.js",
+  "scripts": {
+    "test": "node --test",
+    "start": "node app.js"
+  },
   "license": "MIT",
   "type": "module",
   "dependencies": {
